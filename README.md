@@ -1,5 +1,5 @@
 # License Plate Recognition with Python and OpenCV 
-## AUTHOR: Victor Navareño
+### Created by Victor Navareño
 
 This project detects and reads license plates from vehicle images using Python, OpenCV, and Tesseract OCR. The program extracts the region of the license plate and recognizes the text using Optical Character Recognition (OCR). This can be useful for various applications like automatic parking systems, traffic monitoring, and more.
 
