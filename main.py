@@ -1,6 +1,10 @@
-#import packages
 import cv2
 import imutils as im
+import pytesseract
+
+# Point to the Tesseract executable location
+pytesseract.pytesseract.tesseract_cmd = r'D:\DESCARGAS GENERAL\TESSERACT\tesseract.exe'  # Update path as needed
+
 
 # Read the image file
 input = 'img/matricula.jpeg'
@@ -41,6 +45,22 @@ for c in cnts:
             print(approx)
             NumberPlateCnt = approx #This is our approx Number Plate Contour
             break
+
+
+if NumberPlateCnt is not None:    
+    mask = cv2.drawContours(image.copy(), [NumberPlateCnt], -1, (255,255,255), thickness=cv2.FILLED)
+    masked_img = cv2.bitwise_and(image, mask)
+
+    x, y, w, h = cv2.boundingRect(NumberPlateCnt)
+    plate_img = gray[y:y+h, x:x+w]
+
+    text = pytesseract.image_to_string(plate_img, config='--psm 11')
+
+    print("Detected Number is:", text)
+
+
+
+
 
 # Display the original image
 cv2.imshow("Input Image", image)
