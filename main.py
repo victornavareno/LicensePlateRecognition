@@ -1,37 +1,57 @@
+#import packages
 import cv2
+import imutils as im
 
-# frameWidth = 640   #Frame Width
-frameWidth = 1000   #Frame Width
-franeHeight = 480   # Frame Height
+# Read the image file
+input = 'img/matricula.jpeg'
+image = cv2.imread(input)
 
-plateCascade = cv2.CascadeClassifier("haarcascade_russian_plate_number.xml")
-minArea = 500
+# Resize the image - change width to 500
+newwidth = 500
+image = im.resize(image, width=newwidth)
 
-cap =cv2.VideoCapture(0)
-cap.set(3,frameWidth)
-cap.set(4,franeHeight)
-cap.set(10,150)
+# RGB to Gray scale conversion
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+# Noise removal with iterative bilateral filter(removes noise while preserving edges)
+d, sigmaColor, sigmaSpace = 11,17,17
+filtered_img = cv2.bilateralFilter(gray, d, sigmaColor, sigmaSpace)
+
+# Find Edges of the grayscale image
+lower, upper = 170, 200
+edged = cv2.Canny(filtered_img, lower, upper)
+
+# Find contours based on Edges
+cnts,hir = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+cnts=sorted(cnts, key = cv2.contourArea, reverse = True)[:10]
+NumberPlateCnt = None
+print("Number of Contours found : " + str(len(cnts)))
+
+
+# loop over our contours to find the best possible approximate contour of number plate
 count = 0
+for c in cnts:
+        peri = cv2.arcLength(c, True)
+        
+        epsilon = 0.01 * peri
+        approx = cv2.approxPolyDP(c, epsilon, True)
+        
+        if len(approx) == 4:  # Select the contour with 4 corners
+            print(approx)
+            NumberPlateCnt = approx #This is our approx Number Plate Contour
+            break
 
-while True:
-    success , img  = cap.read()
+# Display the original image
+cv2.imshow("Input Image", image)
+# Display Grayscale image
+cv2.imshow("Gray scale Image", gray)
+# Display Filtered image
+cv2.imshow("After Applying Bilateral Filter", filtered_img)
+# Display Canny Image
+cv2.imshow("After Canny Edges", edged)
+# Drawing the selected contour on the original image
+cv2.drawContours(image, [NumberPlateCnt], -1, (255,0,0), 2)
+cv2.imshow("Output", image)
 
-    imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    numberPlates = plateCascade.detectMultiScale(imgGray, 1.1, 4)
-
-    for (x, y, w, h) in numberPlates:
-        area = w*h
-        if area > minArea:
-            cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-            cv2.putText(img,"NumberPlate",(x,y-5),cv2.FONT_HERSHEY_COMPLEX,1,(0,0,255),2)
-            imgRoi = img[y:y+h,x:x+w]
-            cv2.imshow("Number Plate",imgRoi)
-    cv2.imshow("Result",img)
-    if cv2.waitKey(1) & 0xFF ==ord('s'):
-        cv2.imwrite(f".\IMAGES\{str(count)}.jpg",imgRoi)
-        cv2.rectangle(img,(0,200),(640,300),(0,255,0),cv2.FILLED)
-        cv2.putText(img,"Scan Saved",(15,265),cv2.FONT_HERSHEY_COMPLEX,2,(0,0,255),2)
-        cv2.imshow("Result",img)
-        cv2.waitKey(500)
-        count+=1
+cv2.waitKey(0) #Wait for user input before closing the images displayed
