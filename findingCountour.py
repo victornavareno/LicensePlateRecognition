@@ -3,6 +3,7 @@ import cv2
 import imutils as im
 
 # Read the image file
+NumberPlateCnt = None # will define a contour which will be processed to find the number plate
 
 def findContour(input):
     image = cv2.imread(input)
@@ -26,7 +27,6 @@ def findContour(input):
     cnts,hir = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
     cnts=sorted(cnts, key = cv2.contourArea, reverse = True)[:10]
-    NumberPlateCnt = None
     print("Number of Contours found : " + str(len(cnts)))
 
 
@@ -57,3 +57,4 @@ def findContour(input):
     cv2.imshow("Output", image)
 
     cv2.waitKey(0) #Wait for user input before closing the images displayed
+
